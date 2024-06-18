@@ -1,0 +1,15 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+/.quarto/
+
+*Rproj
+/_site
+_publish.yml
+
+*.rds
+*.png
+*.gif
+*.bmp

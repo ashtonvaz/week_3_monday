@@ -1,0 +1,89 @@
+---
+title: "Week 3 Monday"
+execute: 
+  echo: false
+---
+```{r}
+#| label: setup
+#| warning: false
+
+# Install and Load Necessary Libraries
+library (tidycensus)
+library (tidyverse)
+library(ggplot2)
+library(cowplot)
+```
+```{r}
+# Load median household income data for Texas and Florida without progress bar
+income_data <- get_acs(
+  geography = "county",
+  variables = "B19013_001", # Median Household Income
+  state = c("TX", "FL"),
+  year = 2020,
+  survey = "acs5",
+  progress = FALSE
+)
+
+# Add state information
+income_data <- income_data |>
+  mutate(state = ifelse(substr(GEOID, 1, 2) == "48", "Texas", "Florida"))
+
+# Separate data for Texas and Florida
+texas_data <- income_data %>% filter(str_detect(GEOID, "^48"))
+florida_data <- income_data %>% filter(str_detect(GEOID, "^12"))
+
+# Create the plot for both states
+single_plot <- ggplot(income_data, aes(x = reorder(NAME, estimate), y = estimate, fill = GEOID)) +
+  geom_bar(stat = "identity", show.legend = FALSE) +
+  coord_flip() +
+  facet_wrap(~state, scales = "free_y") +
+  labs(
+    title = "Median Household Income by County in Texas and Florida (2020)",
+    x = "County",
+    y = "Median Household Income (USD)",
+    caption = "Source: U.S. Census Bureau, American Community Survey 5-Year Estimates"
+  ) +
+  theme_minimal() +
+  scale_y_continuous(labels = scales::dollar_format())
+
+# Plot for Texas
+texas_plot <- ggplot(texas_data, aes(x = reorder(NAME, estimate), y = estimate)) +
+  geom_bar(stat = "identity", fill = "blue", color = "black") +
+  coord_flip() +
+  labs(
+    title = "Median Household Income by County in Texas (2020)",
+    x = "County",
+    y = "Median Household Income (USD)",
+    caption = "Source: U.S. Census Bureau, American Community Survey 5-Year Estimates"
+  ) +
+  theme_minimal() +
+  scale_y_continuous(labels = scales::dollar_format())
+  # theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+# Plot for Florida
+florida_plot <- ggplot(florida_data, aes(x = reorder(NAME, estimate), y = estimate)) +
+  geom_bar(stat = "identity", fill = "orange", color = "black") +
+  coord_flip() +
+  labs(
+    title = "Median Household Income by County in Florida (2020)",
+    x = "County",
+    y = "Median Household Income (USD)",
+    caption = "Source: U.S. Census Bureau, American Community Survey 5-Year Estimates"
+  ) +
+  theme_minimal() +
+  scale_y_continuous(labels = scales::dollar_format())
+  # theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+#single_plot
+florida_plot
+texas_plot
+
+# Using cowplot
+#combined_plot <- plot_grid(texas_plot, florida_plot, labels = c("A", "B"), ncol = 2)
+##combined_plot <- plot_grid(texas_plot, florida_plot, labels = c("A", "B"), ncol = 1, nrow = 2)
+#print(combined_plot)
+
+# Alternatively, using patchwork
+# combined_plot <- texas_plot + florida_plot + plot_layout(ncol = 2)
+# print(combined_plot)
+```
